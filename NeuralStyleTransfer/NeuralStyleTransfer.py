@@ -2,7 +2,7 @@
 """
 # Created by Yuexiong Ding on 2018/2/7.
 # 代码来源：http://blog.csdn.net/matrix_space/article/details/54290460
-# 
+# VGG 模型下载地址：http://www.vlfeat.org/matconvnet/models/imagenet-vgg-verydeep-19.mat
 """
 import os
 import sys
