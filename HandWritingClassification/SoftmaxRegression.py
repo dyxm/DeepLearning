@@ -30,7 +30,6 @@ correct_prediction = tf.equal(tf.argmax(y_out, 1), tf.argmax(y_label, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
 
-
 # 创建Session，开始训练
 with tf.Session() as sess:
     # 初始化所有变量
