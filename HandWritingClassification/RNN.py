@@ -2,17 +2,22 @@
 # RNN 手写数字识别
 #
 import tensorflow as tf
-import numpy as np
+import os
 from tensorflow.examples.tutorials.mnist import input_data
 from tensorflow.contrib import rnn
+
+# 模型存储路径
+ckpt_dir = './Ckpt_Dir/RNN'
 
 # 超参设置
 # 学习率
 lr = 0.001
 # 迭代次数
-iteration = 100000
+iteration = 1000
 # 每轮训练数据的 batch_size = 128
 batch_size = 128
+# 每训练20次打印一次训练结果
+display_step = 20
 
 # 神经网络参数设置
 # 输入层
@@ -42,6 +47,9 @@ biases = {
     # (10, )
     'out': tf.Variable(tf.constant(0.1, shape=[n_claeese]))
 }
+
+# 计数器，当前训练轮数
+global_step = tf.Variable(0, name='global_step', trainable=False)
 
 
 # 定义 RNN 模型
@@ -75,6 +83,11 @@ train_op = tf.train.AdamOptimizer(lr).minimize(cost)
 correct_pred = tf.equal(tf.argmax(pred, 1), tf.argmax(y, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
+# 创建存储模型路径
+if not os.path.exists(ckpt_dir):
+    os.makedirs(ckpt_dir)
+saver = tf.train.Saver()
+
 with tf.Session() as sess:
     # 读取数据
     mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
@@ -82,16 +95,27 @@ with tf.Session() as sess:
     # 初始化变量
     tf.global_variables_initializer().run()
 
-    step = 0
-    while step * batch_size < iteration:
+    # 获取模型检查点
+    ckpt = tf.train.get_checkpoint_state(ckpt_dir)
+    if ckpt and ckpt.model_checkpoint_path:
+        saver.restore(sess, ckpt.model_checkpoint_path)
+
+    # 当前训练步数
+    start_step = global_step.eval()
+    print('从第 %d 步开始训练...' % start_step)
+
+    for i in range(start_step, iteration):
         batch_xs, batch_ys = mnist.train.next_batch(batch_size)
         batch_xs = batch_xs.reshape([batch_size, n_steps, n_inputs])
         sess.run(train_op, feed_dict={x: batch_xs, y: batch_ys})
-        if step % 10 == 0:
+        if i % display_step == 0:
             train_accuracy = sess.run(accuracy, feed_dict={x: batch_xs, y: batch_ys})
-            print('第 %d 次训练后准确率为 %f ' % (step, train_accuracy))
+            print('第 %d 次训练后准确率为 %f ' % (i, train_accuracy))
 
-        step += 1
+        # 更改计数器
+        global_step.assign(i).eval()
+        # 存储模型
+        saver.save(sess, ckpt_dir + '/model.ckpt', global_step=global_step)
 
     test_xs = mnist.test.images
     test_ys = mnist.test.labels
