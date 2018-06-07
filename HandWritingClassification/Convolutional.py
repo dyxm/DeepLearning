@@ -117,8 +117,6 @@ def main():
         os.makedirs(ckpt_dir)
     saver = tf.train.Saver()
 
-
-
     with tf.Session() as sess:
         # 训练次数
         iteration = 2000
